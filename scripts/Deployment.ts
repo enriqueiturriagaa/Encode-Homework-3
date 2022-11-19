@@ -1,71 +1,81 @@
 import { ethers } from "hardhat";
-import { MyToken__factory } from "../typechain-types";
+import { Ballot, Ballot__factory, MyToken__factory } from "../typechain-types";
+import { tokenizedBallotSol } from "../typechain-types/contracts";
+import * as dotenv from "dotenv";
+dotenv.config();
 
 const TEST_MINT_VALUE = ethers.utils.parseEther("10");
 
 async function main() {
-  const accounts = await ethers.getSigners();
-  const [minter, voter, other] = accounts;
-  const contractFactory = new MyToken__factory(minter);
-  const contract = await contractFactory.deploy();
-  await contract.deployed();
-  console.log(`Tokenized voted contract deployed at ${contract.address}\n`);
+  const provider = ethers.getDefaultProvider("goerli", {
+    alchemy: process.env.ALCHEMY_API_KEY,
+  });
+  // const wallet = ethers.Wallet.fromMnemonic(process.env.MNEMONIC ?? "");
+  const wallet = new ethers.Wallet(process.env.PRIVATE_KEY ?? "");
+  const signer = wallet.connect(provider);
+  const balanceBN = await signer.getBalance();
+  console.log(`Connected to the account of ${signer.address}
+  \nThis account has a balance of ${balanceBN.toString()}} Wei`);
 
-  let voterTokenBalance = await contract.balanceOf(voter.address);
-  console.log(
-    `Voter starts with this  ${voterTokenBalance} decimals of balance\n`
-  );
+  const PROPOSALS = ["Proposal1", "Proposal2", "Proposal3"];
 
-  const mintTX = await contract.mint(voter.address, TEST_MINT_VALUE);
-  await mintTX.wait();
-  voterTokenBalance = await contract.balanceOf(voter.address);
-  console.log(
-    `After the mint the voter has ${voterTokenBalance} decimals of balance\n`
-  );
-  let votePower = await contract.getVotes(voter.address);
-  console.log(
-    `After the mint the voter has ${votePower} decimals of Vote power\n`
-  );
-  const delegateTx = await contract.connect(voter).delegate(voter.address);
-  await delegateTx.wait();
-  votePower = await contract.getVotes(voter.address);
-  console.log(
-    `After the delegation the voter has ${votePower} decimals of Vote power\n`
-  );
-  const transferTx = await contract
-    .connect(voter)
-    .transfer(other.address, TEST_MINT_VALUE.div(2));
-  await transferTx.wait();
-  votePower = await contract.getVotes(voter.address);
-  console.log(
-    `After the transfer of the votes the voter has ${votePower} decimals of Vote power\n`
-  );
-  votePower = await contract.getVotes(other.address);
-  console.log(
-    `After the transfer of the votes the OTHER has ${votePower} decimals of Vote power\n`
-  );
-
-  const delegateOtherTx = await contract.connect(other).delegate(other.address);
-  await delegateOtherTx.wait();
-  votePower = await contract.getVotes(other.address);
-  console.log(
-    `After the self delegation, the other account has ${votePower} decimals of vote power\n`
-  );
-
-  const currentBlock = await ethers.provider.getBlock("latest");
-  for (
-    let blockNumber = currentBlock.number - 1;
-    blockNumber >= 0;
-    blockNumber--
-  ) {
-    const pastVotePower = await contract.getPastVotes(
-      voter.address,
-      blockNumber
-    );
-    console.log(
-      `At block ${blockNumber}, the voter had ${pastVotePower} decimals of Vote power\n`
-    );
+  function convertStringArraytoByteArray(array: string[]) {
+    const byte32array = [];
+    for (let index = 0; index < array.length; index++) {
+      byte32array.push(ethers.utils.formatBytes32String(array[index]));
+    }
+    return byte32array;
   }
+
+  const contractFactory = new MyToken__factory(signer);
+  const tokenContract = await contractFactory.deploy();
+  await tokenContract.deployed();
+  console.log(`Token contract deployed at ${tokenContract.address}\n`);
+
+  //  let accounts: SignerWithAddress[];
+  //  accounts = await ethers.getSigners();
+  const ballotContractFactory = new Ballot__factory(signer);
+  const ballotContract = await ballotContractFactory.deploy(
+    convertStringArraytoByteArray(PROPOSALS),
+    tokenContract.address,
+    await provider.getBlockNumber()
+  );
+  await ballotContract.deployed();
+
+  console.log(`Ballot contract deployed at ${ballotContract.address}\n`);
+
+  const ourAddresses = [
+    "0xa77133c0768D11916775F1E743843FECf03D5875", //Enrique
+    "0x20b3F4f5A127Cc65CdBD7548E72C0E439D0C5F43", //Mohamad
+    "0x3eD7DA3DCC9A1a1cB73c56a37926F82612D8Ac30", //Ishmeet
+    "0x3936332118d2DBd062eE2577F42cd50D9207F76e", //Branlog
+    "0xa2d590fee197c0b614fe7c3e10303327f38c0dc3", //ChaIn
+    "0xc9Cfa840d1BB8290d0b94d6647008B495Ec77B56", //Kronos
+  ];
+
+  const mintTX = await tokenContract.mint(ourAddresses[0], TEST_MINT_VALUE);
+  await mintTX.wait();
+
+  let enriqueTokenBalance = await tokenContract.balanceOf(ourAddresses[0]);
+  console.log(
+    `Enrique starts with this  ${enriqueTokenBalance} decimals of balance\n`
+  );
+
+  let enriqueVotePower = await ballotContract.votePower(ourAddresses[0]);
+  console.log(
+    `After the mint Enrique has ${enriqueVotePower} decimals of Vote power\n`
+  );
+
+  // const delegateTxEnrique = await tokenContract
+  //   .connect(ourAddresses[0])
+  //   .delegate(ourAddresses[0]);
+  // await delegateTxEnrique.wait();
+
+  enriqueVotePower = await ballotContract.votePower(ourAddresses[0]);
+
+  console.log(
+    `After the Self Delegation Enrique has ${enriqueVotePower} decimals of Vote power\n`
+  );
 }
 
 main().catch((err) => {

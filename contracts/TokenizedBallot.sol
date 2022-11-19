@@ -17,7 +17,7 @@ contract Ballot {
     Proposal[] public proposals;
 
     constructor(bytes32[] memory proposalNames, address _voteToken, uint256 _targetBlock) {
-        _voteToken = MyToken(_voteToken);
+        voteToken = MyToken(_voteToken);
         targetBlock = _targetBlock;
         for (uint i = 0; i < proposalNames.length; i++) {
  
