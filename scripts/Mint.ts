@@ -36,7 +36,7 @@ async function main() {
     "0x3eD7DA3DCC9A1a1cB73c56a37926F82612D8Ac30", //Ishmeet
     "0x3936332118d2DBd062eE2577F42cd50D9207F76e", //Branlog
     "0xa2d590fee197c0b614fe7c3e10303327f38c0dc3", //ChaIn
-    "0xc9Cfa840d1BB8290d0b94d6647008B495Ec77B56", //Kronos
+    "0x4Aa40754eA12c2F95b35DBA818D556449228C2B7", //Kronos
   ];
 
   const mintTXforMohamed = await tokenContract.mint(
