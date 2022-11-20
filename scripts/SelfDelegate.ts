@@ -1,15 +1,9 @@
 import { ethers } from "hardhat";
-import {
-  Ballot,
-  Ballot__factory,
-  MyToken,
-  MyToken__factory,
-} from "../typechain-types";
-import { tokenizedBallotSol } from "../typechain-types/contracts";
+import {  MyToken__factory } from "../typechain-types";
 import * as dotenv from "dotenv";
 dotenv.config();
 
-const TEST_MINT_VALUE = ethers.utils.parseEther("10");
+// yarn run ts-node --files .\scripts\SelfDelegate.ts <tokenContractAddress> <delegatedAddress>
 
 async function main() {
   const provider = ethers.getDefaultProvider("goerli", {
@@ -17,51 +11,30 @@ async function main() {
     etherscan: process.env.ETHERSCAN_API_KEY,
     alchemy: process.env.ALCHEMY_API_KEY,
   });
+
   // const wallet = ethers.Wallet.fromMnemonic(process.env.MNEMONIC ?? "");
   const wallet = new ethers.Wallet(process.env.PRIVATE_KEY ?? "");
   const signer = wallet.connect(provider);
+
   const balanceBN = await signer.getBalance();
-  console.log(`Connected to the account of ${signer.address}
-      \nThis account has a balance of ${balanceBN.toString()}} Wei`);
+  console.log(`Connected to the account of ${signer.address}\nThis account has a balance of ${balanceBN.toString()}} Wei`);
 
-  const tokenAddress = "0xa5a442BDe1c8d041780427fbA581dF024ebA99A0"; //TOKEN CONTRACT
-  const ballotAddress = "0xE91975D7ca8Df5ca7D503DEFF564566AAb290D49"; //BALLOT CONTRACT
+  const params = process.argv.slice(2);
+  if (params.length != 2) throw new Error(`Expected 2 arguments for tokenContractAddress and delegatedAddress but received ${params.length} argument(s) instead.`);
+  const tokenContractAddress = params[0];
+  const delegatedAddress = params[1];
 
-  let tokenContract: MyToken;
   const tokenContractFactory = new MyToken__factory(signer);
-  tokenContract = tokenContractFactory.attach(tokenAddress);
+  const tokenContract = await tokenContractFactory.attach(tokenContractAddress);
 
-  let ballotContract: Ballot;
-  const ballotContractFactory = new Ballot__factory(signer);
-  ballotContract = ballotContractFactory.attach(ballotAddress);
+  const votesPrior = await tokenContract.getVotes(delegatedAddress);
+  console.log(`Prior to delegating, the address ${delegatedAddress} has ${votesPrior} votes.`);
 
-  const ourAddresses = [
-    "0xa77133c0768D11916775F1E743843FECf03D5875", //Enrique
-    "0x20b3F4f5A127Cc65CdBD7548E72C0E439D0C5F43", //Mohamad
-  ];
+  const delegateTx = await tokenContract.delegate(delegatedAddress);
+  await delegateTx.wait();
 
-  let enriqueTokenBalance = await tokenContract.balanceOf(ourAddresses[0]);
-  console.log(
-    `Enrique starts with this  ${enriqueTokenBalance} decimals of balance\n`
-  );
-
-  let enriqueVotePower = await tokenContract.getVotes(ourAddresses[0]);
-  console.log(
-    `After the mint Enrique has ${enriqueVotePower} decimals of Vote power\n`
-  );
-  let mohamadVotePower = await tokenContract.getVotes(ourAddresses[1]);
-  console.log(
-    `After the mint Mohamad has ${mohamadVotePower} decimals of Vote power\n`
-  );
-
-  const delegateTxEnrique = await tokenContract.delegate(ourAddresses[0]);
-  await delegateTxEnrique.wait();
-
-  enriqueVotePower = await tokenContract.getVotes(ourAddresses[0]);
-
-  console.log(
-    `After the Self Delegation Enrique has ${enriqueVotePower} decimals of Vote power\n`
-  );
+  const votesAfter = await tokenContract.getVotes(delegatedAddress);
+  console.log(`After delegating, the address ${delegatedAddress} has ${votesAfter} votes.`);
 }
 
 main().catch((err) => {
