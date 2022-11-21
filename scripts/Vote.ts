@@ -22,8 +22,8 @@ async function main() {
   console.log(`Connected to the account of ${signer.address}
           \nThis account has a balance of ${balanceBN.toString()}} Wei`);
 
-  const tokenAddress = "0xa5a442BDe1c8d041780427fbA581dF024ebA99A0"; //TOKEN CONTRACT
-  const ballotAddress = "0xE91975D7ca8Df5ca7D503DEFF564566AAb290D49"; //BALLOT CONTRACT
+  const tokenAddress = "0x50ACB8C330aBdB3C733cd4331dd6d44B423CA6e9"; //TOKEN CONTRACT
+  const ballotAddress = "0xF4a97DAd9a03Fb9791f4e1E7526d8dC4cb56290c"; //BALLOT CONTRACT
 
   let tokenContract: MyToken;
   const tokenContractFactory = new MyToken__factory(signer);
@@ -35,20 +35,26 @@ async function main() {
 
   const ourAddresses = [
     "0xa77133c0768D11916775F1E743843FECf03D5875", //Enrique
-    "0x20b3F4f5A127Cc65CdBD7548E72C0E439D0C5F43", //Mohamad
   ];
 
   let enriqueVotePower = await tokenContract.getVotes(ourAddresses[0]);
   console.log(`Before voting ${enriqueVotePower} has decimals of Vote power\n`);
 
   const voteTx = await ballotContract.vote(
-    0,
+    2,
     await tokenContract.getVotes(ourAddresses[0]),
-    { gasLimit: 300000 }
+    { gasLimit: 400000 }
   );
 
-  const result = await ballotContract.winnerName();
-  console.log(ethers.utils.parseBytes32String(result));
+  await voteTx.wait();
+  const receiptEnrique = await voteTx.wait();
+  console.log(`Enrique transactionHash: ${receiptEnrique.transactionHash}`);
+
+  enriqueVotePower = await tokenContract.getVotes(ourAddresses[0]);
+  console.log(`After voting ${enriqueVotePower} has decimals of Vote power\n`);
+
+  // const result = await ballotContract.winnerName();
+  // console.log(ethers.utils.parseBytes32String(result));
 }
 
 main().catch((err) => {

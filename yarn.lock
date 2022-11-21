@@ -4248,8 +4248,9 @@ __metadata:
     hardhat: ^2.12.2
     hardhat-gas-reporter: ^1.0.8
     mocha: ^10.1.0
+    process.argv: ^0.6.0
     solidity-coverage: ^0.8.0
-    ts-node: ">=8.0.0"
+    ts-node: ^10.9.1
     typechain: ^8.1.1
     typescript: ">=4.5.0"
   languageName: unknown
@@ -5024,6 +5025,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"obop@npm:^0.2.0":
+  version: 0.2.1
+  resolution: "obop@npm:0.2.1"
+  checksum: b14d35b4d06ca032728733dabf2580e6a0a25ca146ef40efcf3d8c92a0a209727b12b6b3f271c43ac27055711d6d66979f13a30acb315782bbf840da58843061
+  languageName: node
+  linkType: hard
+
 "once@npm:1.x, once@npm:^1.3.0":
   version: 1.4.0
   resolution: "once@npm:1.4.0"
@@ -5241,6 +5249,15 @@ __metadata:
   version: 2.0.1
   resolution: "process-nextick-args@npm:2.0.1"
   checksum: 1d38588e520dab7cea67cbbe2efdd86a10cc7a074c09657635e34f035277b59fbb57d09d8638346bf7090f8e8ebc070c96fa5fd183b777fff4f5edff5e9466cf
+  languageName: node
+  linkType: hard
+
+"process.argv@npm:^0.6.0":
+  version: 0.6.0
+  resolution: "process.argv@npm:0.6.0"
+  dependencies:
+    obop: ^0.2.0
+  checksum: ef64dd261415dae0853401235d4817c680a30713d6530b4339b70a61ad5135db26af29c6fbc512adabf6fa4aa50908a506c607cb26fad4222272c60e10614faa
   languageName: node
   linkType: hard
 
@@ -6354,7 +6371,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ts-node@npm:>=8.0.0":
+"ts-node@npm:^10.9.1":
   version: 10.9.1
   resolution: "ts-node@npm:10.9.1"
   dependencies:
